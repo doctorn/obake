@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "ver",
+  "ver_derive",
+]

@@ -1,0 +1,9 @@
+[package]
+name = "ver"
+authors = ["Nathan Corbyn <me@nathancorbyn.com>"]
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+serde = "1.0"
+ver_derive = { path = "../ver_derive" }
