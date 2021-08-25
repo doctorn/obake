@@ -1,5 +1,5 @@
 [workspace]
 members = [
-  "ver",
-  "ver_derive",
+  "obake",
+  "obake_macros",
 ]

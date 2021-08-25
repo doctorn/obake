@@ -1,5 +1,5 @@
 [package]
-name = "ver_derive"
+name = "obake_macros"
 authors = ["Nathan Corbyn <me@nathancorbyn.com>"]
 version = "0.1.0"
 edition = "2018"
