@@ -1,0 +1,11 @@
+error: `#[obake(inherit)]` can only be applied to fields with `#[obake::versioned]` types
+ --> $DIR/bad_inherits.rs:8:13
+  |
+8 |     #[obake(inherit)]
+  |             ^^^^^^^
+
+error: `#[obake(inherit)]` can only be applied to fields with `#[obake::versioned]` types
+  --> $DIR/bad_inherits.rs:16:17
+   |
+16 |         #[obake(inherit)]
+   |                 ^^^^^^^

@@ -123,13 +123,13 @@ impl Parse for VersionedVariantFields {
         }
 
         let lookahead = input.lookahead1();
-        if lookahead.peek(syn::token::Paren) {
-            Ok(Self::Unnamed(input.parse()?))
+        Ok(if lookahead.peek(syn::token::Paren) {
+            Self::Unnamed(input.parse()?)
         } else if lookahead.peek(syn::token::Brace) {
-            Ok(Self::Named(input.parse()?))
+            Self::Named(input.parse()?)
         } else {
-            Err(lookahead.error())
-        }
+            Self::Unit
+        })
     }
 }
 

@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 obake_macros = { path = "../obake_macros" }
+
+[dev-dependencies]
+trybuild = "1.0"

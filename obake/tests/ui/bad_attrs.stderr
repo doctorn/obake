@@ -1,0 +1,29 @@
+error: unexpected token
+ --> $DIR/bad_attrs.rs:2:24
+  |
+2 | #[obake(version("0.1.0", extra_nonsense))]
+  |                        ^
+
+error: unexpected token
+ --> $DIR/bad_attrs.rs:8:21
+  |
+8 |     #[obake(cfg("*"), extra_nonsense)]
+  |                     ^
+
+error: unrecognised `obake` helper attribute
+  --> $DIR/bad_attrs.rs:16:17
+   |
+16 |         #[obake(not_an_obake_helper)]
+   |                 ^^^^^^^^^^^^^^^^^^^
+
+error: unexpected token
+  --> $DIR/bad_attrs.rs:25:24
+   |
+25 |         #[obake(inherit, extra_nonsense)]
+   |                        ^
+
+error: unexpected token
+  --> $DIR/bad_attrs.rs:34:24
+   |
+34 |         #[obake(cfg("*", extra_nonsense))]
+   |                        ^

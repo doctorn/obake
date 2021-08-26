@@ -1,0 +1,23 @@
+error: expected curly braces
+ --> $DIR/generics.rs:2:11
+  |
+2 | struct Foo<T> {}
+  |           ^
+
+error: expected curly braces
+ --> $DIR/generics.rs:5:11
+  |
+5 | struct Bar<'a> {}
+  |           ^
+
+error: expected curly braces
+ --> $DIR/generics.rs:8:9
+  |
+8 | enum Baz<T> {}
+  |         ^
+
+error: expected curly braces
+  --> $DIR/generics.rs:11:10
+   |
+11 | enum Flim<'a> {}
+   |          ^

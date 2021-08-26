@@ -1,0 +1,11 @@
+error: duplicate definition of version 0.1.0
+ --> $DIR/duplicate_version.rs:3:17
+  |
+3 | #[obake(version("0.1.0"))]
+  |                 ^^^^^^^
+
+error: duplicate definition of version 0.1.0
+ --> $DIR/duplicate_version.rs:8:17
+  |
+8 | #[obake(version("0.1.0"))]
+  |                 ^^^^^^^

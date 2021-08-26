@@ -1,0 +1,29 @@
+error: `#[obake(inherit)]` not valid in this context
+ --> $DIR/bad_helpers.rs:4:13
+  |
+4 |     #[obake(inherit)]
+  |             ^^^^^^^
+
+error: `#[obake(cfg(...))]` not valid in this context
+ --> $DIR/bad_helpers.rs:9:17
+  |
+9 |     #[obake(cfg("0.1.0"))]
+  |                 ^^^^^^^
+
+error: `#[obake(inherit)]` not valid in this context
+  --> $DIR/bad_helpers.rs:16:13
+   |
+16 |     #[obake(inherit)]
+   |             ^^^^^^^
+
+error: `#[obake(cfg(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:21:17
+   |
+21 |     #[obake(cfg("0.1.0"))]
+   |                 ^^^^^^^
+
+error: `#[obake(inherit)]` not valid in this context
+  --> $DIR/bad_helpers.rs:27:17
+   |
+27 |         #[obake(inherit)]
+   |                 ^^^^^^^

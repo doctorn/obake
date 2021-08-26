@@ -1,0 +1,11 @@
+error: `#[obake::versioned]` items require at least one `#[obake(version(...))]` attribute
+ --> $DIR/no_version.rs:2:1
+  |
+2 | struct Foo {}
+  | ^^^^^^
+
+error: `#[obake::versioned]` items require at least one `#[obake(version(...))]` attribute
+ --> $DIR/no_version.rs:5:1
+  |
+5 | enum Bar {}
+  | ^^^^

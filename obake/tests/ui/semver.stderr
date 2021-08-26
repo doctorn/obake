@@ -1,0 +1,23 @@
+error: expected string literal
+ --> $DIR/semver.rs:2:17
+  |
+2 | #[obake(version(not_a_sem_str))]
+  |                 ^^^^^^^^^^^^^
+
+error: unexpected character 'n' while parsing major version number
+ --> $DIR/semver.rs:6:17
+  |
+6 | #[obake(version("not a semver"))]
+  |                 ^^^^^^^^^^^^^^
+
+error: expected string literal
+  --> $DIR/semver.rs:12:17
+   |
+12 |     #[obake(cfg(not_a_ver_str))]
+   |                 ^^^^^^^^^^^^^
+
+error: unexpected character 'n' while parsing major version number
+  --> $DIR/semver.rs:19:17
+   |
+19 |     #[obake(cfg("not a semver constraint"))]
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^

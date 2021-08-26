@@ -202,29 +202,29 @@ impl VersionedItem {
         Ok(())
     }
 
-    fn expand_version(&self, version: &Version) -> TokenStream2 {
+    fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
         let attrs = self.attrs.attrs();
         let vis = &self.vis;
         let ident = self.ident().version(version);
         let body = match &self.kind {
             VersionedItemKind::Struct(inner) => {
                 let struct_token = &inner.struct_token;
-                let fields = &try_expand!(inner.fields.expand_version(version));
+                let fields = inner.fields.expand_version(version)?;
                 quote!(#struct_token #ident #fields)
             }
             VersionedItemKind::Enum(inner) => {
                 let enum_token = &inner.enum_token;
-                let variants = &try_expand!(inner.variants.expand_version(version));
+                let variants = inner.variants.expand_version(version)?;
                 quote!(#enum_token #ident #variants)
             }
         };
 
-        quote! {
+        Ok(quote! {
             #[doc(hidden)]
             #[allow(non_camel_case_types)]
             #(#attrs)*
             #vis #body
-        }
+        })
     }
 
     fn expand_variants(&self) -> impl Iterator<Item = syn::Ident> + '_ {
@@ -239,9 +239,11 @@ impl VersionedItem {
         let versions = try_expand!(self.extract_versions());
         let current = versions.last().unwrap();
 
-        let defs = versions
+        let defs = try_expand!(versions
             .iter()
-            .map(|attr| self.expand_version(&attr.version));
+            .map(|attr| self.expand_version(&attr.version))
+            .collect::<Result<Vec<_>>>())
+        .into_iter();
 
         let alias = self.ident().version(&current.version);
         let alias_decl = {
@@ -284,6 +286,7 @@ impl VersionedItem {
                 #[automatically_derived]
                 impl From<#enum_ident> for #ident {
                     fn from(mut from: #enum_ident) -> Self {
+                        #![allow(unreachable_code)]
                         loop {
                             from = match from {
                                 #(#migrations)*

@@ -1,0 +1,5 @@
+error: expected `struct` or `enum`
+ --> $DIR/items.rs:2:1
+  |
+2 | fn foo() {}
+  | ^^
