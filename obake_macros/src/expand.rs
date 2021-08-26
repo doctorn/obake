@@ -236,7 +236,7 @@ impl VersionedStruct {
             let ident = &self.ident;
 
             quote! {
-                impl crate::Versioned for #ident {
+                impl ::obake::Versioned for #ident {
                     type Versioned = #enum_ident;
                 }
             }
