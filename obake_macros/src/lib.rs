@@ -12,12 +12,10 @@ mod internal;
 mod expand;
 mod parse;
 
-use internal::VersionedStruct;
-
 #[proc_macro_attribute]
 pub fn versioned(args: TokenStream, input: TokenStream) -> TokenStream {
     let _ = parse_macro_input!(args as Nothing);
-    let input = parse_macro_input!(input as VersionedStruct);
+    let input = parse_macro_input!(input as internal::VersionedItem);
     let expanded = quote!(#input);
     TokenStream::from(expanded)
 }

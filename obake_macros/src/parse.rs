@@ -1,23 +1,11 @@
 use std::convert::{TryFrom, TryInto};
 
 use syn::parse::{Parse, ParseStream, Result};
-use syn::{braced, parenthesized};
+use syn::{braced, parenthesized, Token};
 
 use crate::internal::*;
 
 const OBAKE: &str = "obake";
-
-impl Parse for VersionedField {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self {
-            attrs: input.parse()?,
-            vis: input.parse()?,
-            ident: input.parse()?,
-            colon_token: input.parse()?,
-            ty: input.parse()?,
-        })
-    }
-}
 
 impl Parse for VersionAttr {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -26,10 +14,7 @@ impl Parse for VersionAttr {
         let version = Version::parse(&version_str.value())
             .map_err(|err| syn::Error::new(version_str.span(), err))?;
 
-        Ok(Self {
-            version,
-            span,
-        })
+        Ok(Self { version, span })
     }
 }
 
@@ -44,18 +29,6 @@ impl Parse for CfgAttr {
     }
 }
 
-impl Parse for VersionedFields {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        let brace_token = braced!(content in input);
-
-        Ok(Self {
-            brace_token,
-            fields: content.parse_terminated(VersionedField::parse)?,
-        })
-    }
-}
-
 impl Parse for ObakeAttribute {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident = input.parse::<syn::Ident>()?;
@@ -64,16 +37,14 @@ impl Parse for ObakeAttribute {
             _ if ident == "version" => {
                 let content;
                 parenthesized!(content in input);
-                ObakeAttribute::Version(content.parse()?)
+                Self::Version(content.parse()?)
             }
             _ if ident == "cfg" => {
                 let content;
                 parenthesized!(content in input);
-                ObakeAttribute::Cfg(content.parse()?)
+                Self::Cfg(content.parse()?)
             }
-            _ if ident == "inherit" => ObakeAttribute::Inherit(InheritAttr {
-                span: ident.span(),
-            }),
+            _ if ident == "inherit" => Self::Inherit(InheritAttr { span: ident.span() }),
             _ => {
                 return Err(syn::Error::new(
                     ident.span(),
@@ -97,12 +68,12 @@ impl TryFrom<syn::Attribute> for VersionedAttribute {
 
     fn try_from(attr: syn::Attribute) -> Result<Self> {
         attr.path.get_ident().map_or_else(
-            || Ok(VersionedAttribute::Attribute(attr.clone())),
+            || Ok(Self::Attribute(attr.clone())),
             |ident| {
                 if ident == OBAKE {
-                    Ok(VersionedAttribute::Obake(attr.clone().try_into()?))
+                    Ok(Self::Obake(attr.clone().try_into()?))
                 } else {
-                    Ok(VersionedAttribute::Attribute(attr.clone()))
+                    Ok(Self::Attribute(attr.clone()))
                 }
             },
         )
@@ -121,14 +92,108 @@ impl Parse for VersionedAttributes {
     }
 }
 
-impl Parse for VersionedStruct {
+impl Parse for VersionedField {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self {
             attrs: input.parse()?,
             vis: input.parse()?,
+            ident: input.parse()?,
+            colon_token: input.parse()?,
+            ty: input.parse()?,
+        })
+    }
+}
+
+impl Parse for VersionedFields {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        let brace_token = braced!(content in input);
+
+        Ok(Self {
+            brace_token,
+            fields: content.parse_terminated(VersionedField::parse)?,
+        })
+    }
+}
+
+impl Parse for VersionedVariantFields {
+    fn parse(input: ParseStream) -> Result<Self> {
+        if input.is_empty() {
+            return Ok(Self::Unit);
+        }
+
+        let lookahead = input.lookahead1();
+        if lookahead.peek(syn::token::Paren) {
+            Ok(Self::Unnamed(input.parse()?))
+        } else if lookahead.peek(syn::token::Brace) {
+            Ok(Self::Named(input.parse()?))
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
+
+impl Parse for VersionedVariant {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            attrs: input.parse()?,
+            ident: input.parse()?,
+            fields: input.parse()?,
+        })
+    }
+}
+
+impl Parse for VersionedVariants {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        let brace_token = braced!(content in input);
+
+        Ok(Self {
+            brace_token,
+            variants: content.parse_terminated(VersionedVariant::parse)?,
+        })
+    }
+}
+
+impl Parse for VersionedStruct {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
             struct_token: input.parse()?,
             ident: input.parse()?,
             fields: input.parse()?,
+        })
+    }
+}
+
+impl Parse for VersionedEnum {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            enum_token: input.parse()?,
+            ident: input.parse()?,
+            variants: input.parse()?,
+        })
+    }
+}
+
+impl Parse for VersionedItemKind {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Token![struct]) {
+            Ok(Self::Struct(input.parse()?))
+        } else if lookahead.peek(Token![enum]) {
+            Ok(Self::Enum(input.parse()?))
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
+
+impl Parse for VersionedItem {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            attrs: input.parse()?,
+            vis: input.parse()?,
+            kind: input.parse()?,
         })
     }
 }

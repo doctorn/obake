@@ -11,6 +11,26 @@ pub struct VersionAttr {
     pub span: Span,
 }
 
+impl PartialEq for VersionAttr {
+    fn eq(&self, other: &Self) -> bool {
+        self.version == other.version
+    }
+}
+
+impl Eq for VersionAttr {}
+
+impl PartialOrd for VersionAttr {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.version.partial_cmp(&other.version)
+    }
+}
+
+impl Ord for VersionAttr {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.version.cmp(&other.version)
+    }
+}
+
 #[derive(Clone)]
 pub struct CfgAttr {
     pub req: VersionReq,
@@ -36,12 +56,6 @@ pub struct VersionedField {
     pub ident: syn::Ident,
     pub colon_token: Token![:],
     pub ty: syn::Type,
-}
-
-#[derive(Clone)]
-pub struct VersionedFields {
-    pub brace_token: syn::token::Brace,
-    pub fields: syn::punctuated::Punctuated<VersionedField, Token![,]>,
 }
 
 #[derive(Clone)]
@@ -122,30 +136,70 @@ impl VersionedAttributes {
 }
 
 #[derive(Clone)]
-pub struct VersionedStruct {
+pub struct VersionedFields {
+    pub brace_token: syn::token::Brace,
+    pub fields: syn::punctuated::Punctuated<VersionedField, Token![,]>,
+}
+
+#[derive(Clone)]
+pub enum VersionedVariantFields {
+    Unnamed(syn::FieldsUnnamed),
+    Named(VersionedFields),
+    Unit,
+}
+
+#[derive(Clone)]
+pub struct VersionedVariant {
     pub attrs: VersionedAttributes,
-    pub vis: syn::Visibility,
+    pub ident: syn::Ident,
+    pub fields: VersionedVariantFields,
+}
+
+#[derive(Clone)]
+pub struct VersionedVariants {
+    pub brace_token: syn::token::Brace,
+    pub variants: syn::punctuated::Punctuated<VersionedVariant, Token![,]>,
+}
+
+#[derive(Clone)]
+pub struct VersionedStruct {
     pub struct_token: Token![struct],
     pub ident: syn::Ident,
     pub fields: VersionedFields,
 }
 
-impl PartialEq for VersionAttr {
-    fn eq(&self, other: &Self) -> bool {
-        self.version == other.version
-    }
+#[derive(Clone)]
+pub struct VersionedEnum {
+    pub enum_token: Token![enum],
+    pub ident: syn::Ident,
+    pub variants: VersionedVariants,
 }
 
-impl Eq for VersionAttr {}
-
-impl PartialOrd for VersionAttr {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.version.partial_cmp(&other.version)
-    }
+#[derive(Clone)]
+pub enum VersionedItemKind {
+    Struct(VersionedStruct),
+    Enum(VersionedEnum),
 }
 
-impl Ord for VersionAttr {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.version.cmp(&other.version)
+#[derive(Clone)]
+pub struct VersionedItem {
+    pub attrs: VersionedAttributes,
+    pub vis: syn::Visibility,
+    pub kind: VersionedItemKind,
+}
+
+impl VersionedItem {
+    pub fn ident(&self) -> &syn::Ident {
+        match &self.kind {
+            VersionedItemKind::Struct(inner) => &inner.ident,
+            VersionedItemKind::Enum(inner) => &inner.ident,
+        }
+    }
+
+    pub fn keyword_span(&self) -> Span {
+        match &self.kind {
+            VersionedItemKind::Struct(inner) => inner.struct_token.span,
+            VersionedItemKind::Enum(inner) => inner.enum_token.span,
+        }
     }
 }

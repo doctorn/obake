@@ -87,15 +87,74 @@ impl VersionedFields {
             .collect::<Result<Vec<_>>>()?
             .into_iter();
 
-        Ok(quote! {
-            {
-                #(#fields)*
+        Ok(quote!({
+            #(#fields)*
+        }))
+    }
+}
+
+impl VersionedVariantFields {
+    fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
+        Ok(match &self {
+            Self::Unnamed(unnamed) => quote!(#unnamed),
+            Self::Named(named) => {
+                let fields = named.expand_version(version)?;
+                quote!(#fields)
             }
+            Self::Unit => quote!(),
         })
     }
 }
 
-impl VersionedStruct {
+impl VersionedVariant {
+    fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
+        if let Some(inherit) = self.attrs.inherits().next() {
+            return Err(syn::Error::new(
+                inherit.span,
+                "`#[obake(inherit)]` not valid in this context",
+            ));
+        }
+
+        let mut reqs: Vec<_> = self.attrs.cfgs().map(|attr| attr.req.clone()).collect();
+
+        // If we have no `#[obake(cfg(...))]` attributes, default to `#[obake(cfg("*"))]`
+        if reqs.is_empty() {
+            reqs.push(VersionReq::STAR);
+        }
+
+        // If we can't find a matching `#[obake(cfg(...))]` variant, this field is disabled
+        // in this version, so return nothing
+        if !reqs.iter().any(|req| req.matches(version)) {
+            return Ok(quote!());
+        }
+
+        let attrs = self.attrs.attrs();
+        let ident = &self.ident;
+        let fields = self.fields.expand_version(version)?;
+
+        Ok(quote! {
+            #(#attrs)*
+            #ident #fields,
+        })
+    }
+}
+
+impl VersionedVariants {
+    fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
+        let variants = self
+            .variants
+            .iter()
+            .map(|variant| variant.expand_version(version))
+            .collect::<Result<Vec<_>>>()?
+            .into_iter();
+
+        Ok(quote!({
+            #(#variants)*
+        }))
+    }
+}
+
+impl VersionedItem {
     fn extract_versions(&self) -> Result<Vec<VersionAttr>> {
         let mut versions: Vec<_> = self.attrs.versions().cloned().collect();
         versions.sort();
@@ -134,9 +193,9 @@ impl VersionedStruct {
         }
 
         if self.attrs.versions().next().is_none() {
-            return Err(syn::Error::new_spanned(
-                self.struct_token,
-                "`#[obake::versioned]` structs require at least one `#[obake(version(...))]` attribute",
+            return Err(syn::Error::new(
+                self.keyword_span(),
+                "`#[obake::versioned]` items require at least one `#[obake(version(...))]` attribute",
             ));
         }
 
@@ -146,22 +205,32 @@ impl VersionedStruct {
     fn expand_version(&self, version: &Version) -> TokenStream2 {
         let attrs = self.attrs.attrs();
         let vis = &self.vis;
-        let struct_token = &self.struct_token;
-        let ident = &self.ident.version(version);
-        let fields = &try_expand!(self.fields.expand_version(version));
+        let ident = self.ident().version(version);
+        let body = match &self.kind {
+            VersionedItemKind::Struct(inner) => {
+                let struct_token = &inner.struct_token;
+                let fields = &try_expand!(inner.fields.expand_version(version));
+                quote!(#struct_token #ident #fields)
+            }
+            VersionedItemKind::Enum(inner) => {
+                let enum_token = &inner.enum_token;
+                let variants = &try_expand!(inner.variants.expand_version(version));
+                quote!(#enum_token #ident #variants)
+            }
+        };
 
         quote! {
             #[doc(hidden)]
             #[allow(non_camel_case_types)]
             #(#attrs)*
-            #vis #struct_token #ident #fields
+            #vis #body
         }
     }
 
     fn expand_variants(&self) -> impl Iterator<Item = syn::Ident> + '_ {
         self.attrs
             .versions()
-            .map(move |attr| self.ident.version(&attr.version))
+            .map(move |attr| self.ident().version(&attr.version))
     }
 
     fn expand(&self) -> TokenStream2 {
@@ -174,17 +243,14 @@ impl VersionedStruct {
             .iter()
             .map(|attr| self.expand_version(&attr.version));
 
-        let alias = &self.ident.version(&current.version);
+        let alias = self.ident().version(&current.version);
         let alias_decl = {
             let vis = &self.vis;
-            let ident = &self.ident;
-
-            quote! {
-                #vis type #ident = #alias;
-            }
+            let ident = self.ident();
+            quote!(#vis type #ident = #alias;)
         };
 
-        let enum_ident = format_ident!("Versioned{}", self.ident);
+        let enum_ident = format_ident!("Versioned{}", self.ident());
         let enum_decl = {
             let vis = &self.vis;
             let attrs = self.attrs.attrs();
@@ -203,7 +269,7 @@ impl VersionedStruct {
         };
 
         let from_impl = {
-            let ident = &self.ident;
+            let ident = self.ident();
             let migrations =
                 versions
                     .iter()
@@ -211,10 +277,7 @@ impl VersionedStruct {
                     .zip(self.expand_variants())
                     .map(|(attr, prev)| {
                         let next = ident.version(&attr.version);
-
-                        quote! {
-                            #enum_ident::#prev(x) => #enum_ident::#next(x.into()),
-                        }
+                        quote!(#enum_ident::#prev(x) => #enum_ident::#next(x.into()),)
                     });
 
             quote! {
@@ -233,8 +296,7 @@ impl VersionedStruct {
         };
 
         let versioned_impl = {
-            let ident = &self.ident;
-
+            let ident = self.ident();
             quote! {
                 impl ::obake::Versioned for #ident {
                     type Versioned = #enum_ident;
@@ -243,16 +305,14 @@ impl VersionedStruct {
         };
 
         let macro_rules = {
-            let ident = &self.ident;
+            let ident = self.ident();
             let rules = self
                 .attrs
                 .versions()
                 .zip(self.expand_variants())
                 .map(|(attr, variant)| {
-                    let version = format!("{}", attr.version);
-                    quote! {
-                        [#version] => { #variant };
-                    }
+                    let version = attr.version.to_string();
+                    quote!([#version] => { #variant };)
                 });
 
             quote! {
@@ -273,7 +333,7 @@ impl VersionedStruct {
     }
 }
 
-impl ToTokens for VersionedStruct {
+impl ToTokens for VersionedItem {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         tokens.append_all(self.expand());
     }
