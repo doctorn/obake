@@ -3,8 +3,18 @@ name = "obake_macros"
 authors = ["Nathan Corbyn <me@nathancorbyn.com>"]
 version = "1.0.0"
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Macros for versioned data-structures"
+homepage = "https://github.com/doctorn/obake"
+repository = "https://github.com/doctorn/obake"
+documentation = "https://docs.rs/obake/"
+keywords = ["versioning", "config", "serialization", "no_std"]
+categories = ["config"]
+readme = "../README.md"
+include = ["Cargo.toml", "src/**/*.rs", "../README.md", "../LICENSE-APACHE", "../LICENSE-MIT"]
 
 [lib]
+name = "obake_macros"
 proc-macro = true
 
 [dependencies]
