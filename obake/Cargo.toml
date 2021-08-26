@@ -1,8 +1,17 @@
 [package]
 name = "obake"
 authors = ["Nathan Corbyn <me@nathancorbyn.com>"]
-version = "0.1.0"
+version = "1.0.0"
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Versioned data-structures for Rust"
+homepage = "https://github.com/doctorn/obake"
+repository = "https://github.com/doctorn/obake"
+documentation = "https://docs.rs/obake/"
+keywords = ["versioning", "config", "serialization", "no_std"]
+categories = ["config"]
+readme = "crates-io.md"
+include = ["Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
 obake_macros = { path = "../obake_macros" }
