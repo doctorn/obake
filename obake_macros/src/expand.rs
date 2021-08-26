@@ -231,7 +231,7 @@ impl VersionedItem {
                 let variants = inner.variants.expand_version(version)?;
                 quote!(#enum_token #ident #variants)
             }
-        }; 
+        };
 
         Ok(quote! {
             #[doc(hidden)]

@@ -52,7 +52,7 @@ impl Parse for ObakeAttribute {
                     span: ident.span(),
                     tokens: content.parse()?,
                 })
-            },
+            }
             _ => {
                 return Err(syn::Error::new(
                     ident.span(),

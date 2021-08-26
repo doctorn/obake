@@ -8,8 +8,8 @@ use quote::quote;
 use syn::parse::Nothing;
 use syn::parse_macro_input;
 
-mod internal;
 mod expand;
+mod internal;
 mod parse;
 
 #[proc_macro_attribute]
