@@ -14,7 +14,7 @@ readme = "crates-io.md"
 include = ["Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
-obake_macros = { path = "../obake_macros" }
+obake_macros = { path = "../obake_macros", version = "1.0.0" }
 
 [dev-dependencies]
 trybuild = "1.0"
