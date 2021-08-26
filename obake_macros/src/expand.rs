@@ -255,12 +255,10 @@ impl VersionedItem {
         let enum_ident = format_ident!("Versioned{}", self.ident());
         let enum_decl = {
             let vis = &self.vis;
-            let attrs = self.attrs.attrs();
             let variants = self.expand_variants();
 
             quote! {
                 #[doc(hidden)]
-                #(#attrs)*
                 #vis enum #enum_ident {
                     #(
                         #[allow(non_camel_case_types)]
