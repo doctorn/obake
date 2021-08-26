@@ -1,65 +1,27 @@
 use std::convert::{TryFrom, TryInto};
 
 use syn::parse::{Parse, ParseStream, Result};
-use syn::{braced, Token};
+use syn::{braced, parenthesized};
 
 use crate::internal::*;
 
-const OKABE: &str = "okabe";
+const OBAKE: &str = "obake";
 
 impl Parse for VersionedField {
     fn parse(input: ParseStream) -> Result<Self> {
-        /*
-        let mut attrs = vec![];
-        let mut requirement = None;
-        let unfiltered = input.call(syn::Attribute::parse_outer)?;
-
-        for attr in unfiltered {
-            match attr.path.get_ident() {
-                Some(path) if path == "requires" => {
-                    if requirement.is_some() {
-                        return Err(syn::Error::new(
-                            path.span(),
-                            "multiple uses of the `#[requires(...)]` attribute on field",
-                        ));
-                    }
-
-                    let version_str = attr.parse_args::<syn::LitStr>()?;
-                    let version_req = VersionReq::parse(&version_str.value())
-                        .map_err(|err| syn::Error::new(path.span(), err))?;
-
-                    requirement = Some(version_req);
-                }
-                _ => attrs.push(attr),
-            }
-        }
-
-        let requirement = requirement.unwrap_or_default();
-
         Ok(Self {
-            requirement,
-            attrs,
+            attrs: input.parse()?,
             vis: input.parse()?,
             ident: input.parse()?,
             colon_token: input.parse()?,
             ty: input.parse()?,
         })
-        */
-        unimplemented!()
     }
 }
 
-/*
 impl Parse for VersionAttr {
     fn parse(input: ParseStream) -> Result<Self> {
         let version_str = input.parse::<syn::LitStr>()?;
-        let migration = if !input.is_empty() {
-            input.parse::<Token![,]>()?;
-            Some(input.parse::<syn::Path>()?)
-        } else {
-            None
-        };
-
         let span = version_str.span();
         let version = Version::parse(&version_str.value())
             .map_err(|err| syn::Error::new(version_str.span(), err))?;
@@ -67,27 +29,66 @@ impl Parse for VersionAttr {
         Ok(Self {
             version,
             span,
-            migration,
         })
     }
 }
-*/
+
+impl Parse for CfgAttr {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let req_str = input.parse::<syn::LitStr>()?;
+        let span = req_str.span();
+        let req = VersionReq::parse(&req_str.value())
+            .map_err(|err| syn::Error::new(req_str.span(), err))?;
+
+        Ok(Self { req, span })
+    }
+}
 
 impl Parse for VersionedFields {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
+        let brace_token = braced!(content in input);
+
         Ok(Self {
-            brace_token: braced!(content in input),
-            versioned: content.parse_terminated(VersionedField::parse)?,
+            brace_token,
+            fields: content.parse_terminated(VersionedField::parse)?,
         })
     }
 }
 
-impl TryFrom<syn::Attribute> for OkabeAttribute {
+impl Parse for ObakeAttribute {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let ident = input.parse::<syn::Ident>()?;
+
+        Ok(match ident {
+            _ if ident == "version" => {
+                let content;
+                parenthesized!(content in input);
+                ObakeAttribute::Version(content.parse()?)
+            }
+            _ if ident == "cfg" => {
+                let content;
+                parenthesized!(content in input);
+                ObakeAttribute::Cfg(content.parse()?)
+            }
+            _ if ident == "inherit" => ObakeAttribute::Inherit(InheritAttr {
+                span: ident.span(),
+            }),
+            _ => {
+                return Err(syn::Error::new(
+                    ident.span(),
+                    "unrecognised `obake` helper attribute",
+                ))
+            }
+        })
+    }
+}
+
+impl TryFrom<syn::Attribute> for ObakeAttribute {
     type Error = syn::Error;
 
-    fn try_from(value: syn::Attribute) -> Result<Self> {
-        unimplemented!()
+    fn try_from(attr: syn::Attribute) -> Result<Self> {
+        attr.parse_args()
     }
 }
 
@@ -98,8 +99,8 @@ impl TryFrom<syn::Attribute> for VersionedAttribute {
         attr.path.get_ident().map_or_else(
             || Ok(VersionedAttribute::Attribute(attr.clone())),
             |ident| {
-                if ident == OKABE {
-                    Ok(VersionedAttribute::Okabe(attr.clone().try_into()?))
+                if ident == OBAKE {
+                    Ok(VersionedAttribute::Obake(attr.clone().try_into()?))
                 } else {
                     Ok(VersionedAttribute::Attribute(attr.clone()))
                 }
@@ -122,18 +123,12 @@ impl Parse for VersionedAttributes {
 
 impl Parse for VersionedStruct {
     fn parse(input: ParseStream) -> Result<Self> {
-        let attrs = input.parse()?;
-        let vis = input.parse()?;
-        let struct_token = input.parse()?;
-        let ident = input.parse::<syn::Ident>()?;
-        let fields = input.parse()?;
-
         Ok(Self {
-            attrs,
-            vis,
-            struct_token,
-            ident,
-            fields,
+            attrs: input.parse()?,
+            vis: input.parse()?,
+            struct_token: input.parse()?,
+            ident: input.parse()?,
+            fields: input.parse()?,
         })
     }
 }
