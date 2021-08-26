@@ -43,10 +43,17 @@ pub struct InheritAttr {
 }
 
 #[derive(Clone)]
+pub struct DeriveAttr {
+    pub span: Span,
+    pub tokens: TokenStream2,
+}
+
+#[derive(Clone)]
 pub enum ObakeAttribute {
     Version(VersionAttr),
     Cfg(CfgAttr),
     Inherit(InheritAttr),
+    Derive(DeriveAttr),
 }
 
 #[derive(Clone)]
@@ -93,6 +100,14 @@ impl ObakeAttribute {
             _ => None,
         }
     }
+
+    pub fn derive(&self) -> Option<&DeriveAttr> {
+        #![allow(clippy::match_wildcard_for_single_variants)]
+        match &self {
+            ObakeAttribute::Derive(derive) => Some(derive),
+            _ => None,
+        }
+    }
 }
 
 impl VersionedAttribute {
@@ -128,6 +143,10 @@ impl VersionedAttributes {
 
     pub fn inherits(&self) -> impl Iterator<Item = &InheritAttr> + '_ {
         self.obake().filter_map(ObakeAttribute::inherit)
+    }
+
+    pub fn derives(&self) -> impl Iterator<Item = &DeriveAttr> + '_ {
+        self.obake().filter_map(ObakeAttribute::derive)
     }
 
     pub fn attrs(&self) -> impl Iterator<Item = &syn::Attribute> + '_ {

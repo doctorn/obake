@@ -45,6 +45,14 @@ impl Parse for ObakeAttribute {
                 Self::Cfg(content.parse()?)
             }
             _ if ident == "inherit" => Self::Inherit(InheritAttr { span: ident.span() }),
+            _ if ident == "derive" => {
+                let content;
+                parenthesized!(content in input);
+                Self::Derive(DeriveAttr {
+                    span: ident.span(),
+                    tokens: content.parse()?,
+                })
+            },
             _ => {
                 return Err(syn::Error::new(
                     ident.span(),

@@ -1,5 +1,6 @@
 #[obake::versioned]
 #[obake(version("0.1.0"))]
+#[obake(derive(PartialEq, Eq, Debug))]
 #[derive(PartialEq, Eq, Debug)]
 struct Foo {}
 

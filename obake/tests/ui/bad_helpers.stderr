@@ -1,29 +1,47 @@
 error: `#[obake(inherit)]` not valid in this context
- --> $DIR/bad_helpers.rs:4:13
+ --> $DIR/bad_helpers.rs:6:13
   |
-4 |     #[obake(inherit)]
+6 |     #[obake(inherit)]
   |             ^^^^^^^
 
 error: `#[obake(cfg(...))]` not valid in this context
- --> $DIR/bad_helpers.rs:9:17
-  |
-9 |     #[obake(cfg("0.1.0"))]
-  |                 ^^^^^^^
+  --> $DIR/bad_helpers.rs:11:17
+   |
+11 |     #[obake(cfg("0.1.0"))]
+   |                 ^^^^^^^
 
 error: `#[obake(inherit)]` not valid in this context
-  --> $DIR/bad_helpers.rs:16:13
+  --> $DIR/bad_helpers.rs:18:13
    |
-16 |     #[obake(inherit)]
+18 |     #[obake(inherit)]
    |             ^^^^^^^
 
 error: `#[obake(cfg(...))]` not valid in this context
-  --> $DIR/bad_helpers.rs:21:17
+  --> $DIR/bad_helpers.rs:23:17
    |
-21 |     #[obake(cfg("0.1.0"))]
+23 |     #[obake(cfg("0.1.0"))]
    |                 ^^^^^^^
 
 error: `#[obake(inherit)]` not valid in this context
-  --> $DIR/bad_helpers.rs:27:17
+  --> $DIR/bad_helpers.rs:29:17
    |
-27 |         #[obake(inherit)]
+29 |         #[obake(inherit)]
    |                 ^^^^^^^
+
+error: `#[obake(derive(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:38:17
+   |
+38 |         #[obake(derive(Clone))]
+   |                 ^^^^^^
+
+error: `#[obake(derive(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:45:17
+   |
+45 |         #[obake(derive(Clone))]
+   |                 ^^^^^^
+
+error: `#[obake(derive(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:53:21
+   |
+53 |             #[obake(derive(Clone))]
+   |                     ^^^^^^

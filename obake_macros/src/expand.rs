@@ -52,6 +52,13 @@ impl VersionedField {
     }
 
     fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
+        if let Some(derive) = self.attrs.derives().next() {
+            return Err(syn::Error::new(
+                derive.span,
+                "`#[obake(derive(...))]` not valid in this context",
+            ));
+        }
+
         let mut reqs: Vec<_> = self.attrs.cfgs().map(|attr| attr.req.clone()).collect();
 
         // If we have no `#[obake(cfg(...))]` attributes, default to `#[obake(cfg("*"))]`
@@ -108,10 +115,17 @@ impl VersionedVariantFields {
 
 impl VersionedVariant {
     fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
-        if let Some(inherit) = self.attrs.inherits().next() {
+        if let Some(derive) = self.attrs.inherits().next() {
+            return Err(syn::Error::new(
+                derive.span,
+                "`#[obake(inherit)]` not valid in this context",
+            ));
+        }
+
+        if let Some(inherit) = self.attrs.derives().next() {
             return Err(syn::Error::new(
                 inherit.span,
-                "`#[obake(inherit)]` not valid in this context",
+                "`#[obake(derive(...))]` not valid in this context",
             ));
         }
 
@@ -217,7 +231,7 @@ impl VersionedItem {
                 let variants = inner.variants.expand_version(version)?;
                 quote!(#enum_token #ident #variants)
             }
-        };
+        }; 
 
         Ok(quote! {
             #[doc(hidden)]
@@ -256,9 +270,14 @@ impl VersionedItem {
         let enum_decl = {
             let vis = &self.vis;
             let variants = self.expand_variants();
+            let derives = self.attrs.derives().map(|attr| {
+                let tokens = &attr.tokens;
+                quote!(#[derive(#tokens)])
+            });
 
             quote! {
                 #[doc(hidden)]
+                #(#derives)*
                 #vis enum #enum_ident {
                     #(
                         #[allow(non_camel_case_types)]
