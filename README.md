@@ -103,6 +103,6 @@ dual licensed as above, without any additional terms or conditions.
 [build-url]: https://github.com/doctorn/obake/actions/workflows/obake.yml
 [issues-shield]: https://img.shields.io/github/issues/doctorn/obake.svg
 [issues-url]: https://github.com/doctorn/obake/issues
-[license-shield]: https://img.shields.io/github/license/doctorn/obake.svg
+[license-shield]: https://img.shields.io/crates/l/obake
 [license-url]: https://github.com/doctorn/obake/blob/main/LICENSE-APACHE
 
