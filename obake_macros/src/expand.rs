@@ -302,6 +302,7 @@ impl VersionedItem {
             quote! {
                 #[automatically_derived]
                 impl From<#enum_ident> for #ident {
+                    #[inline]
                     fn from(mut from: #enum_ident) -> Self {
                         #![allow(unreachable_code)]
                         loop {
@@ -310,6 +311,14 @@ impl VersionedItem {
                                 #enum_ident::#alias(x) => return x,
                             };
                         }
+                    }
+                }
+
+                #[automatically_derived]
+                impl From<#ident> for #enum_ident {
+                    #[inline]
+                    fn from(from: #ident) -> Self {
+                        Self::#alias(from)
                     }
                 }
             }

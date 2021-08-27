@@ -20,5 +20,5 @@ pub use obake_macros::versioned;
 /// Automatically implemented for the latest version of a versioned data-structure.
 pub trait Versioned: Sized {
     /// Aliases the versioned encoding of a versioned data-structure.
-    type Versioned: Into<Self>;
+    type Versioned: From<Self> + Into<Self>;
 }
