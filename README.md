@@ -59,7 +59,7 @@ struct Foo {
 // specific versions of `Foo`
 impl From<Foo!["0.1.0"]> for Foo!["0.2.0"] {
     fn from(foo: Foo!["0.1.0"]) -> Self {
-      Self { bar: 0 }
+        Self { bar: 0 }
     }
 }
 
@@ -68,7 +68,7 @@ impl From<Foo!["0.1.0"]> for Foo!["0.2.0"] {
 let versioned_example: <Foo as obake::Versioned>::Versioned = unimplemented!();
 
 // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
-// version of `Foo` (in this case, `Foo!["0.2.0]`)
+// version of `Foo` (in this case, `Foo!["0.2.0"]`)
 let example: Foo = versioned_example.into();
 ```
 
