@@ -23,7 +23,7 @@ Japanese folklore that shapeshift.
 
 When developing an application, configuration formats and internal data-structures typically evolve
 between versions. However, maintaining backwards compatability between these versions requires
-declaring a maintaining data-structures for legacy formats and code for migrating between them.
+declaring and maintaining data-structures for legacy formats and code for migrating between them.
 Obake aims to make this process effortless.
 
 ## Getting Started
