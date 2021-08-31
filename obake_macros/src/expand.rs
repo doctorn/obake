@@ -216,7 +216,19 @@ impl VersionedItem {
         Ok(())
     }
 
+    fn alias(&self) -> Option<syn::Ident> {
+        self.attrs.versions().last().map(|attr| {
+            self.ident().version(&attr.version)
+        })
+    }
+
+    fn versioned_ident(&self) -> syn::Ident {
+        format_ident!("Versioned{}", self.ident())
+    }
+
     fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
+        let current = self.ident();
+        let version_str = &version.to_string();
         let attrs = self.attrs.attrs();
         let vis = &self.vis;
         let ident = self.ident().version(version);
@@ -238,7 +250,42 @@ impl VersionedItem {
             #[allow(non_camel_case_types)]
             #(#attrs)*
             #vis #body
+
+            #[automatically_derived]
+            impl ::obake::VersionOf<#current> for #ident {
+                const VERSION: &'static str = #version_str;
+
+                #[inline]
+                fn try_from_versioned(
+                    from: ::obake::AnyVersion<#current>,
+                ) -> ::core::result::Result<Self, ::obake::VersionMismatch> {
+                    use ::obake::VersionTagged;
+                    match from {
+                        ::obake::AnyVersion::<#current>::#ident(x) => ::core::result::Result::Ok(x),
+                        other => ::core::result::Result::Err(::obake::VersionMismatch {
+                            expected: Self::VERSION,
+                            found: other.version_str(),
+                        }),
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl ::core::convert::From<#ident> for ::obake::AnyVersion<#current> {
+                #[inline]
+                fn from(from: #ident) -> ::obake::AnyVersion<#current> {
+                    ::obake::AnyVersion::<#current>::#ident(from)
+                }
+            }
         })
+    }
+
+    fn expand_alias(&self) -> TokenStream2 {
+        let vis = &self.vis;
+        let ident = self.ident();
+        let alias = self.alias().unwrap();
+
+        quote!(#vis type #ident = #alias;)
     }
 
     fn expand_variants(&self) -> impl Iterator<Item = syn::Ident> + '_ {
@@ -247,109 +294,122 @@ impl VersionedItem {
             .map(move |attr| self.ident().version(&attr.version))
     }
 
+    fn expand_versioned_enum(&self) -> TokenStream2 {
+        let enum_ident = self.versioned_ident();
+        let vis = &self.vis;
+        let variants = self.expand_variants();
+        let derives = self.attrs.derives().map(|attr| {
+            let tokens = &attr.tokens;
+            quote!(#[derive(#tokens)])
+        });
+
+        quote! {
+            #[doc(hidden)]
+            #(#derives)*
+            #vis enum #enum_ident {
+                #(
+                    #[allow(non_camel_case_types)]
+                    #variants(#variants),
+                )*
+            }
+        }
+    }
+
+    fn expand_from_impl(&self, versions: &Vec<VersionAttr>) -> TokenStream2 {
+        let ident = self.ident();
+        let alias = self.alias().unwrap();
+        let enum_ident = self.versioned_ident();
+        let migrations =
+            versions
+                .iter()
+                .skip(1)
+                .zip(self.expand_variants())
+                .map(|(attr, prev)| {
+                    let next = ident.version(&attr.version);
+                    quote!(#enum_ident::#prev(x) => #enum_ident::#next(x.into()),)
+                });
+
+        quote! {
+            #[automatically_derived]
+            impl ::core::convert::From<#enum_ident> for #ident {
+                #[inline]
+                fn from(mut from: #enum_ident) -> Self {
+                    #![allow(unreachable_code)]
+                    loop {
+                        from = match from {
+                            #(#migrations)*
+                            #enum_ident::#alias(x) => return x,
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    fn expand_versioned_impl(&self) -> TokenStream2 {
+        let ident = self.ident();
+        let enum_ident = self.versioned_ident();
+
+        quote! {
+            impl ::obake::Versioned for #ident {
+                type Versioned = #enum_ident;
+            }
+        }
+    }
+
+    fn expand_version_tagged_impl(&self) -> TokenStream2 {
+        let ident = self.ident();
+        let enum_ident = self.versioned_ident();
+        let variants = self.expand_variants();
+
+        quote! {
+            #[automatically_derived]
+            impl ::obake::VersionTagged<#ident> for #enum_ident {
+                #[inline]
+                fn version_str(&self) -> &'static str {
+                    use ::obake::VersionOf;
+                    match self {
+                        #(#enum_ident::#variants(_) => #variants::VERSION,)*
+                    }
+                }
+            }
+        }
+    }
+
+    fn expand_macro_rules(&self) -> TokenStream2 {
+        let ident = self.ident();
+        let rules = self
+            .attrs
+            .versions()
+            .zip(self.expand_variants())
+            .map(|(attr, variant)| {
+                let version = attr.version.to_string();
+                quote!([#version] => { #variant };)
+            });
+
+        quote! {
+            macro_rules! #ident {
+                #(#rules)*
+            }
+        }
+    }
+
     fn expand(&self) -> TokenStream2 {
         try_expand!(self.check_preconditions());
 
         let versions = try_expand!(self.extract_versions());
-        let current = versions.last().unwrap();
-
         let defs = try_expand!(versions
             .iter()
             .map(|attr| self.expand_version(&attr.version))
             .collect::<Result<Vec<_>>>())
-        .into_iter();
+        .into_iter(); 
 
-        let alias = self.ident().version(&current.version);
-        let alias_decl = {
-            let vis = &self.vis;
-            let ident = self.ident();
-            quote!(#vis type #ident = #alias;)
-        };
-
-        let enum_ident = format_ident!("Versioned{}", self.ident());
-        let enum_decl = {
-            let vis = &self.vis;
-            let variants = self.expand_variants();
-            let derives = self.attrs.derives().map(|attr| {
-                let tokens = &attr.tokens;
-                quote!(#[derive(#tokens)])
-            });
-
-            quote! {
-                #[doc(hidden)]
-                #(#derives)*
-                #vis enum #enum_ident {
-                    #(
-                        #[allow(non_camel_case_types)]
-                        #variants(#variants),
-                    )*
-                }
-            }
-        };
-
-        let from_impl = {
-            let ident = self.ident();
-            let migrations =
-                versions
-                    .iter()
-                    .skip(1)
-                    .zip(self.expand_variants())
-                    .map(|(attr, prev)| {
-                        let next = ident.version(&attr.version);
-                        quote!(#enum_ident::#prev(x) => #enum_ident::#next(x.into()),)
-                    });
-
-            quote! {
-                #[automatically_derived]
-                impl From<#enum_ident> for #ident {
-                    #[inline]
-                    fn from(mut from: #enum_ident) -> Self {
-                        #![allow(unreachable_code)]
-                        loop {
-                            from = match from {
-                                #(#migrations)*
-                                #enum_ident::#alias(x) => return x,
-                            };
-                        }
-                    }
-                }
-
-                #[automatically_derived]
-                impl From<#ident> for #enum_ident {
-                    #[inline]
-                    fn from(from: #ident) -> Self {
-                        Self::#alias(from)
-                    }
-                }
-            }
-        };
-
-        let versioned_impl = {
-            let ident = self.ident();
-            quote! {
-                impl ::obake::Versioned for #ident {
-                    type Versioned = #enum_ident;
-                }
-            }
-        };
-
-        let macro_rules = {
-            let ident = self.ident();
-            let rules = self
-                .attrs
-                .versions()
-                .zip(self.expand_variants())
-                .map(|(attr, variant)| {
-                    let version = attr.version.to_string();
-                    quote!([#version] => { #variant };)
-                });
-
-            quote! {
-                macro_rules! #ident {
-                    #(#rules)*
-                }
-            }
-        };
+        let alias_decl = self.expand_alias();
+        let enum_decl = self.expand_versioned_enum();
+        let from_impl = self.expand_from_impl(&versions);
+        let versioned_impl = self.expand_versioned_impl();
+        let version_tagged_impl = self.expand_version_tagged_impl();
+        let macro_rules = self.expand_macro_rules();
 
         quote! {
             #(#defs)*
@@ -357,6 +417,7 @@ impl VersionedItem {
             #enum_decl
             #from_impl
             #versioned_impl
+            #version_tagged_impl
             #macro_rules
         }
     }
