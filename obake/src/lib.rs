@@ -125,6 +125,8 @@ where
 
     /// Trys to convert the version-tagged representation of `T` into this particular version.
     ///
+    /// ## Errors
+    ///
     /// If `tagged.version_str() != Self::VERSION`, this conversion will fail and report a
     /// corresponding [`VersionMismatch`].
     ///

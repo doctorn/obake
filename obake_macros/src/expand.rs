@@ -316,7 +316,7 @@ impl VersionedItem {
         }
     }
 
-    fn expand_from_impl(&self, versions: &Vec<VersionAttr>) -> TokenStream2 {
+    fn expand_from_impl(&self, versions: &[VersionAttr]) -> TokenStream2 {
         let ident = self.ident();
         let alias = self.alias().unwrap();
         let enum_ident = self.versioned_ident();
