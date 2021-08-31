@@ -45,3 +45,21 @@ error: `#[obake(derive(...))]` not valid in this context
    |
 53 |             #[obake(derive(Clone))]
    |                     ^^^^^^
+
+error: `#[obake(serde(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:63:17
+   |
+63 |         #[obake(serde(skip_serializing))]
+   |                 ^^^^^
+
+error: `#[obake(serde(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:70:17
+   |
+70 |         #[obake(serde(skip_serializing))]
+   |                 ^^^^^
+
+error: `#[obake(serde(...))]` not valid in this context
+  --> $DIR/bad_helpers.rs:78:21
+   |
+78 |             #[obake(serde(skip_serializing))]
+   |                     ^^^^^

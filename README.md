@@ -64,7 +64,7 @@ impl From<Foo!["0.1.0"]> for Foo!["0.2.0"] {
 }
 
 // an enumeration of all versions of `Foo` is accessed using the `obake::AnyVersion` type
-// alias.
+// alias
 let versioned_example: obake::AnyVersion<Foo> = (Foo { bar: 42 }).into();
 
 // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
@@ -78,6 +78,9 @@ assert_eq!(example, Foo { bar: 42 });
 
 - `#[obake(inherit)]`: allows nesting of versioned data-structures.
 - `#[obake(derive(...))]`: allows derive attributes to be applied to generated enums.
+- `#[obake(serde(...))]`: allows [`serde`](https://serde.rs) attributes to be applied to
+  generated `enum`s.
+  - Note: requires the feature `serde`.
 
 ## Limitations
 

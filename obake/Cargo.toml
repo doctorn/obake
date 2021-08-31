@@ -1,7 +1,7 @@
 [package]
 name = "obake"
 authors = ["Nathan Corbyn <me@nathancorbyn.com>"]
-version = "1.0.3"
+version = "1.0.4"
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "Versioned data-structures for Rust"
@@ -21,3 +21,8 @@ obake_macros = { path = "../obake_macros", version = "1.0" }
 
 [dev-dependencies]
 trybuild = "1.0"
+obake_macros = { path = "../obake_macros", version = "1.0", features = ["serde"] }
+
+[features]
+default = []
+serde = ["obake_macros/serde"]

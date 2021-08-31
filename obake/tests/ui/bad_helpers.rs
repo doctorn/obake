@@ -56,4 +56,29 @@ mod derives {
     }
 }
 
+mod serdes {
+    #[obake::versioned]
+    #[obake(version("0.1.0"))]
+    struct Foo {
+        #[obake(serde(skip_serializing))]
+        field_0: u32,
+    }
+
+    #[obake::versioned]
+    #[obake(version("0.1.0"))]
+    enum Bar {
+        #[obake(serde(skip_serializing))]
+        X,
+    }
+
+    #[obake::versioned]
+    #[obake(version("0.1.0"))]
+    enum Baz {
+        X {
+            #[obake(serde(skip_serializing))]
+            field_0: u32,
+        },
+    }
+}
+
 fn main() {}

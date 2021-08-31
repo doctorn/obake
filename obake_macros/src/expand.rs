@@ -59,6 +59,14 @@ impl VersionedField {
             ));
         }
 
+        #[cfg(feature = "serde")]
+        if let Some(serde) = self.attrs.serdes().next() {
+            return Err(syn::Error::new(
+                serde.span,
+                "`#[obake(serde(...))]` not valid in this context",
+            ));
+        }
+
         let mut reqs: Vec<_> = self.attrs.cfgs().map(|attr| attr.req.clone()).collect();
 
         // If we have no `#[obake(cfg(...))]` attributes, default to `#[obake(cfg("*"))]`
@@ -122,10 +130,18 @@ impl VersionedVariant {
             ));
         }
 
-        if let Some(inherit) = self.attrs.derives().next() {
+        if let Some(derive) = self.attrs.derives().next() {
             return Err(syn::Error::new(
-                inherit.span,
+                derive.span,
                 "`#[obake(derive(...))]` not valid in this context",
+            ));
+        }
+
+        #[cfg(feature = "serde")]
+        if let Some(serde) = self.attrs.serdes().next() {
+            return Err(syn::Error::new(
+                serde.span,
+                "`#[obake(serde(...))]` not valid in this context",
             ));
         }
 
@@ -303,6 +319,11 @@ impl VersionedItem {
             let tokens = &attr.tokens;
             quote!(#[derive(#tokens)])
         });
+        #[cfg(feature = "serde")]
+        let derives = derives.chain(self.attrs.serdes().map(|attr| {
+            let tokens = &attr.tokens;
+            quote!(#[serde(#tokens)])
+        }));
 
         quote! {
             #[doc(hidden)]

@@ -53,6 +53,15 @@ impl Parse for ObakeAttribute {
                     tokens: content.parse()?,
                 })
             }
+            #[cfg(feature = "serde")]
+            _ if ident == "serde" => {
+                let content;
+                parenthesized!(content in input);
+                Self::Serde(SerdeAttr {
+                    span: ident.span(),
+                    tokens: content.parse()?,
+                })
+            }
             _ => {
                 return Err(syn::Error::new(
                     ident.span(),

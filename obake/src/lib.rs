@@ -38,7 +38,7 @@
 //! }
 //!
 //! // an enumeration of all versions of `Foo` is accessed using the `obake::AnyVersion` type
-//! // alias.
+//! // alias
 //! let versioned_example: obake::AnyVersion<Foo> = (Foo { bar: 42 }).into();
 //!
 //! // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
@@ -52,6 +52,9 @@
 //!
 //! - `#[obake(inherit)]`: allows nesting of versioned data-structures.
 //! - `#[obake(derive(...))]`: allows derive attributes to be applied to generated `enum`s.
+//! - `#[obake(serde(...))]`: allows [`serde`](https://serde.rs) attributes to be applied to
+//!   generated `enum`s.
+//!     - Note: requires the feature `serde`.
 //!
 //! ## Limitations
 //!
@@ -80,9 +83,14 @@
 ///     attributes are treated as a disjunctively).
 /// - `#[obake(derive(...))]` - Apply a derive to the version-tagged enum generated for the
 ///    data-structre.
+/// - `#[obake(serde(...))]` - Apply a [serde] attribute to the version-tagged enum generated
+///   for the data-structre.
+///   - Note: requires the feature `serde`.
 /// - `#[obake(inherit)]` - Marks a field as having an inherited version (i.e., given a field of
 ///   type `Bar`, when marked with `inherit`, this field will be expanded to a field of type
 ///   `Bar![{version}]` in every version).
+///
+/// [serde]: https://serde.rs
 // TODO(@doctorn) document generated types and trait implementations
 pub use obake_macros::versioned;
 

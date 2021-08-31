@@ -48,12 +48,21 @@ pub struct DeriveAttr {
     pub tokens: TokenStream2,
 }
 
+#[cfg(feature = "serde")]
+#[derive(Clone)]
+pub struct SerdeAttr {
+    pub span: Span,
+    pub tokens: TokenStream2,
+}
+
 #[derive(Clone)]
 pub enum ObakeAttribute {
     Version(VersionAttr),
     Cfg(CfgAttr),
     Inherit(InheritAttr),
     Derive(DeriveAttr),
+    #[cfg(feature = "serde")]
+    Serde(SerdeAttr),
 }
 
 #[derive(Clone)]
@@ -108,6 +117,15 @@ impl ObakeAttribute {
             _ => None,
         }
     }
+
+    #[cfg(feature = "serde")]
+    pub fn serde(&self) -> Option<&SerdeAttr> {
+        #![allow(clippy::match_wildcard_for_single_variants)]
+        match &self {
+            ObakeAttribute::Serde(serde) => Some(serde),
+            _ => None,
+        }
+    }
 }
 
 impl VersionedAttribute {
@@ -147,6 +165,11 @@ impl VersionedAttributes {
 
     pub fn derives(&self) -> impl Iterator<Item = &DeriveAttr> + '_ {
         self.obake().filter_map(ObakeAttribute::derive)
+    }
+
+    #[cfg(feature = "serde")]
+    pub fn serdes(&self) -> impl Iterator<Item = &SerdeAttr> + '_ {
+        self.obake().filter_map(ObakeAttribute::serde)
     }
 
     pub fn attrs(&self) -> impl Iterator<Item = &syn::Attribute> + '_ {
