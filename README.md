@@ -22,7 +22,7 @@ Obake is a procedural macro for declaring and maintaining versioned data-structu
 Japanese folklore that shapeshift.
 
 When developing an application, configuration formats and internal data-structures typically evolve
-between versions. However, maintaining backwards compatability between these versions requires
+between versions. However, maintaining backwards compatibility between these versions requires
 declaring and maintaining data-structures for legacy formats and code for migrating between them.
 Obake aims to make this process effortless.
 
@@ -41,7 +41,7 @@ obake = "1.0"
 #[obake::versioned]                 // create a versioned data-structure
 #[obake(version("0.1.0"))]          // declare some versions
 #[obake(version("0.2.0"))]
-#[derive(PartialEq, Eq, Hash)]      // additional attributes are applied to all versions
+#[derive(Debug, PartialEq, Eq)]     // additional attributes are applied to all versions
 struct Foo {
     #[obake(cfg("0.1.0"))]          // enable fields for specific versions with
     foo: String,                    // semantic version constraints
@@ -63,13 +63,15 @@ impl From<Foo!["0.1.0"]> for Foo!["0.2.0"] {
     }
 }
 
-// an enumeration of all versions of `Foo` is accessed using the
-// `obake::AnyVersioned` type alias:
-let versioned_example: obake::AnyVersion<Foo> = unimplemented!();
+// an enumeration of all versions of `Foo` is accessed using the `obake::AnyVersion` type
+// alias.
+let versioned_example: obake::AnyVersion<Foo> = (Foo { bar: 42 }).into();
 
 // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
 // version of `Foo` (in this case, `Foo!["0.2.0"]`)
 let example: Foo = versioned_example.into();
+
+assert_eq!(example, Foo { bar: 42 });
 ```
 
 ## Other Features
