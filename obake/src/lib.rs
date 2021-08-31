@@ -21,13 +21,13 @@
 //!     foo: String,                    // semantic version constraints
 //!    
 //!     #[obake(cfg(">=0.2, <=0.3.0"))] // any semantic version constraint can appear in
-//!     bar: u32,                       // a `cfg` attribute 
+//!     bar: u32,                       // a `cfg` attribute
 //!    
 //!     #[obake(cfg("0.1.0"))]          // multiple `cfg` attributes are treated as a
 //!     #[obake(cfg(">=0.3"))]          // disjunction over version constraints
 //!     baz: char,
 //! }
-//! 
+//!
 //! // describe migrations between versions using the `From` trait
 //! // and an automatically generated type-level macro for referring to
 //! // specific versions of `Foo`
@@ -36,11 +36,11 @@
 //!         Self { bar: 0 }
 //!     }
 //! }
-//! 
+//!
 //! // an enumeration of all versions of `Foo` is accessed using the `obake::AnyVersion` type
 //! // alias.
 //! let versioned_example: obake::AnyVersion<Foo> = (Foo { bar: 42 }).into();
-//! 
+//!
 //! // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
 //! // version of `Foo` (in this case, `Foo!["0.2.0"]`)
 //! let example: Foo = versioned_example.into();
@@ -49,12 +49,12 @@
 //! ```
 //!
 //! ## Other Features
-//! 
+//!
 //! - `#[obake(inherit)]`: allows nesting of versioned data-structures.
 //! - `#[obake(derive(...))]`: allows derive attributes to be applied to generated `enum`s.
-//! 
+//!
 //! ## Limitations
-//! 
+//!
 //! - Cannot be applied to tuple `struct`s (or `enum` variants with unnamed fields).
 //! - Cannot be applied to items with generic parameters.
 
@@ -151,7 +151,7 @@ where
     ///         found: "0.2.0",
     ///     }),
     /// );
-    /// 
+    ///
     /// let x: obake::AnyVersion<Foo> = (Foo {}).into();
     /// assert_eq!(
     ///     <Foo!["0.2.0"]>::try_from_versioned(x),
