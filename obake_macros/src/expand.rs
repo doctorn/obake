@@ -217,9 +217,10 @@ impl VersionedItem {
     }
 
     fn alias(&self) -> Option<syn::Ident> {
-        self.attrs.versions().last().map(|attr| {
-            self.ident().version(&attr.version)
-        })
+        self.attrs
+            .versions()
+            .last()
+            .map(|attr| self.ident().version(&attr.version))
     }
 
     fn versioned_ident(&self) -> syn::Ident {
@@ -319,15 +320,14 @@ impl VersionedItem {
         let ident = self.ident();
         let alias = self.alias().unwrap();
         let enum_ident = self.versioned_ident();
-        let migrations =
-            versions
-                .iter()
-                .skip(1)
-                .zip(self.expand_variants())
-                .map(|(attr, prev)| {
-                    let next = ident.version(&attr.version);
-                    quote!(#enum_ident::#prev(x) => #enum_ident::#next(x.into()),)
-                });
+        let migrations = versions
+            .iter()
+            .skip(1)
+            .zip(self.expand_variants())
+            .map(|(attr, prev)| {
+                let next = ident.version(&attr.version);
+                quote!(#enum_ident::#prev(x) => #enum_ident::#next(x.into()),)
+            });
 
         quote! {
             #[automatically_derived]
@@ -402,7 +402,7 @@ impl VersionedItem {
             .iter()
             .map(|attr| self.expand_version(&attr.version))
             .collect::<Result<Vec<_>>>())
-        .into_iter(); 
+        .into_iter();
 
         let alias_decl = self.expand_alias();
         let enum_decl = self.expand_versioned_enum();
