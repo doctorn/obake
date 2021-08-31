@@ -64,8 +64,8 @@ impl From<Foo!["0.1.0"]> for Foo!["0.2.0"] {
 }
 
 // an enumeration of all versions of `Foo` is accessed using the
-// `obake::Versioned` trait:
-let versioned_example: <Foo as obake::Versioned>::Versioned = unimplemented!();
+// `obake::AnyVersioned` type alias:
+let versioned_example: obake::AnyVersion<Foo> = unimplemented!();
 
 // this enumeration implements `Into<Foo>`, where `Foo` is the latest declared
 // version of `Foo` (in this case, `Foo!["0.2.0"]`)
@@ -75,11 +75,11 @@ let example: Foo = versioned_example.into();
 ## Other Features
 
 - `#[obake(inherit)]`: allows nesting of versioned data-structures.
-- `#[obake(derive(...))]`: allows derive attributes to be applied to generated `enum`s.
+- `#[obake(derive(...))]`: allows derive attributes to be applied to generated enums.
 
 ## Limitations
 
-- Cannot be applied to tuple `struct`s (or `enum` variants with unnamed fields).
+- Cannot be applied to tuple structs (or enum variants with unnamed fields).
 - Cannot be applied to items with generic parameters.
 
 #### License
