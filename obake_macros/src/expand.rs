@@ -261,6 +261,7 @@ impl VersionedItem {
                 quote!(#enum_token #ident #variants)
             }
         };
+        let versioned_ident = self.versioned_ident();
 
         Ok(quote! {
             #[doc(hidden)]
@@ -288,10 +289,10 @@ impl VersionedItem {
             }
 
             #[automatically_derived]
-            impl ::core::convert::From<#ident> for ::obake::AnyVersion<#current> {
+            impl ::core::convert::From<#ident> for #versioned_ident {
                 #[inline]
-                fn from(from: #ident) -> ::obake::AnyVersion<#current> {
-                    ::obake::AnyVersion::<#current>::#ident(from)
+                fn from(from: #ident) -> #versioned_ident {
+                    #versioned_ident::#ident(from)
                 }
             }
         })
