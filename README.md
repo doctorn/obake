@@ -1,4 +1,4 @@
-[![Build][build-shield]][build-url]
+[![Build](https://github.com/doctorn/obake/actions/workflows/obake.yml/badge.svg)](https://github.com/doctorn/obake/actions/workflows/obake.yml)
 [![Issues][issues-shield]][issues-url]
 [![crates.io][crates-io-shield]][crates-io-url]
 [![License][license-shield]][license-url]
@@ -104,8 +104,6 @@ dual licensed as above, without any additional terms or conditions.
 
 [crates-io-shield]: https://img.shields.io/crates/v/obake
 [crates-io-url]: https://crates.io/crates/obake
-[build-shield]: https://img.shields.io/github/workflow/status/doctorn/obake/Obake
-[build-url]: https://github.com/doctorn/obake/actions/workflows/obake.yml
 [issues-shield]: https://img.shields.io/github/issues/doctorn/obake.svg
 [issues-url]: https://github.com/doctorn/obake/issues
 [license-shield]: https://img.shields.io/crates/l/obake
