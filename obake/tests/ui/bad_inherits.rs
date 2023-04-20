@@ -1,3 +1,5 @@
+#![allow(unused_macros)]
+
 #[obake::versioned]
 #[obake(version("0.1.0"))]
 struct Foo {}
