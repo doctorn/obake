@@ -1,6 +1,5 @@
 use syn::Token;
 
-pub use proc_macro::TokenStream;
 pub use proc_macro2::{Span, TokenStream as TokenStream2};
 
 pub use semver::{Version, VersionReq};
@@ -21,7 +20,7 @@ impl Eq for VersionAttr {}
 
 impl PartialOrd for VersionAttr {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.version.partial_cmp(&other.version)
+        Some(self.cmp(other))
     }
 }
 
@@ -179,6 +178,7 @@ impl VersionedAttributes {
 
 #[derive(Clone)]
 pub struct VersionedFields {
+    #[allow(dead_code)]
     pub brace_token: syn::token::Brace,
     pub fields: syn::punctuated::Punctuated<VersionedField, Token![,]>,
 }
@@ -199,6 +199,7 @@ pub struct VersionedVariant {
 
 #[derive(Clone)]
 pub struct VersionedVariants {
+    #[allow(dead_code)]
     pub brace_token: syn::token::Brace,
     pub variants: syn::punctuated::Punctuated<VersionedVariant, Token![,]>,
 }

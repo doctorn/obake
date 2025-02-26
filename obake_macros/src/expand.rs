@@ -39,7 +39,7 @@ impl VersionedField {
         if let syn::Type::Path(ty_path) = &self.ty {
             let mut ty_path = ty_path.clone();
 
-            if let Some(mut terminator) = ty_path.path.segments.last_mut() {
+            if let Some(terminator) = ty_path.path.segments.last_mut() {
                 terminator.ident = terminator.ident.version(version);
                 return Ok(quote!(#ty_path));
             }
